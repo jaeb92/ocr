@@ -1,0 +1,9 @@
+res/
+stop_words/
+synonym/
+*.jpg
+*.png
+*.jpeg
+*.gif
+*.emf
+*.pdf
