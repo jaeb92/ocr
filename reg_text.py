@@ -1,36 +1,55 @@
-import os
 import re
+import MeCab
+m = MeCab.Tagger()
 
+# text = ["서울대학교", "동국대학교", "가나다라고려대학교"]
+# univ_pattern = r'^[가-힣]{2,7}대학?교?'
+# p_univ = re.compile(univ_pattern)
+# print('문자열: ', text)
+# university_list = list(map(lambda x: p_univ.match(x), text))
+# for i in range(len(university_list)):
+#     print(university_list[i].group(), university_list[i].span())
+#     print(university_list[i].start())
+#     print(university_list[i].end())
+#     print(university_list[i].span())
+# for i in range(len(university_list)):
+#     print(i, ' ', university_list[i])
+l =  ['민원번호', '성적', '증명서', '제WB-PREVIEW', '호', '06974서울특별시동작구특석로84', '(전화', '02)820-6035,6036', '명', '권오주', '생년', '월일 ', '1987.', '1.', '15', '학위명)', '학', '번 20052876', '선', '공', '의과대학의학부', '동국대학교']
+s = '황재빈 씨에스리 서울시 마포구 상암동'
+t = []
+for i in l:
+    result = m.parse(i).split('\n')
+    result = [a.split('\t') for a in result[:-2]]
+    result = [a[0] if a[1].split(',')[1] == '인명' else '' for a in result]
+    # result = list, result))
+    for j in result:
+        if len(j) > 0:
+            t.append(j)
+    # t.append(j if len(j) > 0 else '' for j in result)
+    # for j in result:
+print(t)
+    #     print(len(j))
+    # print(result)
+# result = list(map(lambda x: m.parse(x).split('\n'), l))
+# print(result)
+# for a in result[:-2]:
+#     for b in a:
+#         result = b.split('\t')
+#         for c in result:
+#             print(c.split(','))
+#             if c[1].split(',') == '인명':
+            #     result = c
+            # else:
+            #     result = ''
+            # print(c.split(','))
+            # if c[1].split(',')[1] == '인명':
+            #     result = c
+            # else:
+            #     result = c[0]
+    # print(result)
+# for a in l[:-]:
+#     print(a)
+# result = [a.split('\t') for a in result[:-2]]
+# result = [a if a[1].split(',')[1] == '인명' else a[0] for a in result]
 
-def universty_name_match(text: str) -> list:
-    """
-    :param text:
-    :return: word including university name
-    """
-
-    pattern = r'^[가-힣]{2,7}대학?교?'
-    p = re.compile(pattern)
-    result = list(map(lambda x: p.match(x), text))
-    print(f'match list >', result)
-
-    return result
-
-
-def major_match(text: str) -> list:
-    """
-    :param text:
-    :return: word including major
-    """
-
-    major_list = []
-    pattern = r'^([가-힣]{1,10})(전공|학과|과|학부)'
-    p = re.compile(pattern)
-    result = list(map(lambda x: p.match(x), text))
-    print(f'match list >', result)
-    return result
-
-
-education_list = ['서울대','연세대학교','고려대학교','서울사이버대학교','서울과학기술대학교','경기대학교','경북대학교','홍익대학교','건국대학','숭실대학','동국대','강릉원주대']
-major_list = ['국어국문학과', '문예창작과', '컴퓨터인터넷응용학부', '컴퓨터응용엔지니어링', '멀티미디어영상정보전공', '게임과', '스마트IT콘텐츠전공', '컴퓨터융합공학과', '행정경제학과', '경제학부']
-result1 = universty_name_match(education_list)
-result2 = major_match(major_list)
+# print(result)

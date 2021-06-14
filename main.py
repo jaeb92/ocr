@@ -8,30 +8,41 @@ import argparse
 import pprint
 import time
 from easyocr import Reader
-from ocr_matcher import Matcher
-
+from ocr_matcher2 import Matcher
 
 def cleanup_text(text):
     # strip out non-ASCII text so we can draw the text on the image
     # using OpenCV
     return "".join([c if ord(c) < 128 else "" for c in text]).strip()
 
+#
+# matcher = Matcher([
+#     'name',
+#     'university',
+#     'major',
+# ])
 
-matcher = Matcher()
+# print(matcher.match(["동국대학교 컴퓨터공학과 황재빈"]))
+matcher = Matcher([
+    'name',
+    'university',
+    'major',
+    'id',
+])
 start = time.time()
 ap = argparse.ArgumentParser()
 
 ap.add_argument("-i", "--image", required=True,
                 help="path to input image to be OCR'd")
-ap.add_argument("-l", "--langs", type=str, default="en",
-                help="comma separated list of languages to OCR")
+# ap.add_argument("-l", "--langs", type=str, default="en",
+#                 help="comma separated list of languages to OCR")
 ap.add_argument("-g", "--gpu", type=int, default=-1,
                 help="whether or not GPU should be used")
 args = vars(ap.parse_args())
 
 # break the input languages into a comma separated list
-langs = args["langs"].split(",")
-print("[INFO] OCR'ing with the following languages: {}".format(langs))
+# langs = args["langs"].split(",")
+# print("[INFO] OCR'ing with the following languages: {}".format(langs))
 # load the input image from disk
 
 ff = np.fromfile(args["image"], np.uint8)
@@ -43,7 +54,7 @@ image = cv2.resize(image, None, fx=2.0, fy=2.0, interpolation=cv2.INTER_LINEAR)
 # print(image)
 # OCR the input image using EasyOCR
 print("[INFO] OCR'ing input image...")
-reader = Reader(langs, gpu=args["gpu"] > 0)
+reader = Reader(['ko', 'en'], gpu=args["gpu"] > 0, recognizer='Transformer')
 gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
 results = reader.readtext(gray)
 # print(results)
@@ -55,12 +66,19 @@ for word in results:
 # print(' '.join(contents))
 
 # print('contents:', contents)
-univ_m = matcher.university_match(contents)
-name_m = matcher.name_match(contents)
-major_m = matcher.major_match(contents)
-print(f'\n\nuniv match : {univ_m}\nname match: {name_m}\nmajor match: {major_m}')
+matcher.match(contents)
+# ================================================
+# univ_m = matcher.university_match(contents)
+# name_m = matcher.name_match(contents)
+# major_m = matcher.major_match(contents)
+# print(f'\n\nuniv match : {univ_m}\nname match: {name_m}\nmajor match: {major_m}')
+# ================================================
+
 # print(results[0])
 # loop over the results
+
+# =================================
+# object bounding box
 # for (bbox, text, prob) in results:
 #     text = text.replace(' ', '')
 #     if matcher.university_match(text):
