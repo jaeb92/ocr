@@ -8,12 +8,7 @@ import argparse
 import pprint
 import time
 from easyocr import Reader
-from ocr_matcher2 import Matcher
-
-##########################
-#### 클리너 형태로 수정 ####
-##########################
-
+from ocr_matcher_test import Matcher
 
 def cleanup_text(text):
     # strip out non-ASCII text so we can draw the text on the image

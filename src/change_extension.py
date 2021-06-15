@@ -1,6 +1,6 @@
 import glob
 import os.path
-path = 'testdir'
+path = '../testdir'
 files = glob.glob(path + "/*")
 flag = input('확장자를 변경하시겠습니까?(y/n) >> ')
 ext = input("어떤 확장자로 변경하시겟습니까 ex) jpg, json, txt >>")

@@ -1,14 +1,9 @@
-import os
 import cv2
-from numpy.lib.function_base import interp
-import pytesseract
 import numpy as np
-import matplotlib.pyplot as plt
 import argparse
-import pprint
 import time
 from easyocr import Reader
-from ocr_matcher2 import Matcher
+from ocr_matcher import Matcher
 
 def cleanup_text(text):
     # strip out non-ASCII text so we can draw the text on the image

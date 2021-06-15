@@ -8,8 +8,8 @@ from collections import OrderedDict
 m = MeCab.Tagger()
 
 univ_pattern = r'^[가-힣]{2,7}대학?교'
-major_pattern = r'^(.)+([가-힣]{1,10})(전공|학과|학부)'
-id_pattern = r'^([가-힣]{3,8})?-?([0-9]{2,4})[-(]?학[)-]?([0-9]{2,8})'
+major_pattern = r'^(.)+([가-힣]{1,10})(전공|학과|학부)$'
+id_pattern = r'^([가-힣]{3,8})?-?([0-9]{2,4})[-(]?학[)-]?([0-9]{2,8})$'
 
 p_univ = re.compile(univ_pattern)
 p_major = re.compile(major_pattern)
