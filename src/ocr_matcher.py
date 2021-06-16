@@ -72,7 +72,6 @@ def university_match(text: list) -> list:
     :param text:
     :return: word including university name
     """
-    # print('univ', text)
     l = list(map(lambda x: p_univ.match(x), text))
     # print('university list', l)
     for i in range(len(l)):
