@@ -3,6 +3,13 @@ import glob
 import MeCab
 import re
 from collections import OrderedDict
+import logging
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s %(name)s %(levelname)s - %(message)s')
+stream_handler = logging.StreamHandler()
+stream_handler.setFormatter(formatter)
+logger.addHandler(stream_handler)
 
 m = MeCab.Tagger()
 syn_path = r'../synonym/syn_education.csv'
@@ -76,7 +83,7 @@ def university_match(text: list) -> list:
         if l[i] is not None:
             univ_list.append(l[i].group())
 
-    print(univ_list)
+    # print(univ_list)
     return text
 
 def id_match(text: list) -> list:
@@ -130,12 +137,12 @@ def synonym_cleaner(text: str) -> str:
     result = []
 
     for word_rep, regex in lines:
-        print(word_rep, regex)
-        print(type(word_rep), type(regex))
+        # print(word_rep, regex)
+        # print(type(word_rep), type(regex))
         for t in text:
             t = re.sub(regex, word_rep, t)
             result.append(t)
-    print('result', result)
+    # print('result', result)
 
     return result
 
@@ -163,6 +170,10 @@ def list_to_dic(l, l_user):
 
 
 class Matcher():
+    def __enter__(self):
+        logging.info("Matcher object is created")
+        return self
+
     def __init__(self, clean_list):
         print('List of match function : \"{}\"'.format(", ".join([x[0] for x in func_list])))
         self.clean_list = clean_list
@@ -173,11 +184,16 @@ class Matcher():
         :param text: ocr로 추출된 내용의 리스트 
         :return: 사용자가 선언한 match 리스트를 모두 수행하고 추출된 각 리스트들
         """
-        print('text:', text)
+        # print('text:', text)
         for func_clean in self.cleaning_dic_cus.values():
             text = func_clean(text)
 
         print('=========================================================return results=========================================================\n'
               'major_list', major_list, '\nuniv list:', univ_list, '\nname list: ', name_list, '\nld list: ', id_list,
               '\n================================================================================================================================\n')
+        logging.info(f'univrsity list : {univ_list}')
         return text, major_list, univ_list, name_list, id_list
+
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        logging.info("Matcher object is destroyed")

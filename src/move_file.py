@@ -2,8 +2,8 @@ import os
 import shutil
 
 img_path = r'../res/img/'
-score_path = os.path.join(img_path, '성적')
-gradu_path = os.path.join(img_path, '졸업')
+score_path = os.path.join(img_path, 'score')
+gradu_path = os.path.join(img_path, 'graduation')
 file_list = os.listdir(img_path)
 for file in file_list:
     os.mkdir(score_path) if not os.path.exists(score_path) else ''

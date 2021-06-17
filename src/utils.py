@@ -1,6 +1,6 @@
 import os
 
-def get_eml_file_list(path):
+def get_file_list(path):
     """
     디렉토리 내의 모든 파일 경로 가져오기
     """
