@@ -6,7 +6,9 @@ import time
 from easyocr import Reader
 import datetime
 from utils import get_file_list
-from ocr_matcher_test_str_ver import Matcher
+from log_config import set_logger
+
+from ocr_matcher import Matcher
 
 """
 USAGE:
@@ -18,11 +20,21 @@ USAGE:
 #     return "".join([c if ord(c) < 128 else "" for c in text]).strip()
 
 def str_from_img(IN_PATH, OUT_PATH):
-    IN_GRADU_PATH = r'../res/img/graduation/'
-    IN_SCORE_PATH = r'../res/img/score/'
+    """
+    :param IN_PATH: 이미지 경로 
+    :param OUT_PATH: ocr추출 결과 저장 경로
+    :return: 
+    """
+    logger = set_logger()
+    start = time.time()
+    logger.info(f"ocr start time : {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    ##### standalone으로 테스트할 때 아래 주석을 풀고 실행
 
-    OUT_GRADU_PATH = r'../out/ocr_result/graduation/'
-    OUT_SCORE_PATH = r'../out/ocr_result/score'
+    # IN_GRADU_PATH = r'../res/img/graduation/'
+    # IN_SCORE_PATH = r'../res/img/score/'
+    #
+    # OUT_GRADU_PATH = r'../out/ocr_result/graduation/'
+    # OUT_SCORE_PATH = r'../out/ocr_result/score'
 
     # =========================== USE BELOW WHEN RUN FILE WITH COMMAND LINE ===========================
     # ap = argparse.ArgumentParser()
@@ -36,8 +48,11 @@ def str_from_img(IN_PATH, OUT_PATH):
     # =====================================================================================
 
     file_list = get_file_list(IN_PATH)
+    print('file list: ', file_list)
     for file in file_list:
+        file_start_time = time.time()
         file_name = os.path.basename(file)
+        print(f'{file_name} start ocr\'ing {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
         save_file_name = file_name.split('.')[0] + '.txt'
 
         # open file
@@ -70,12 +85,22 @@ def str_from_img(IN_PATH, OUT_PATH):
         # OCR 결과 파일로 저장
         with open(os.path.join(OUT_PATH, save_file_name), 'w', encoding='utf-8') as f:
             f.write(str(contents))
+        file_end_time = time.time()
+        file_running_time = file_end_time - file_start_time
+        file_running_time = str(datetime.timedelta(seconds=file_running_time))
+        print(f'{file_name} end ocr\'ing {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
+        logger.info(f"{file_name} OCR'ing takes {file_running_time} seconds")
 
+    end = time.time()
+    running_time = end - start
+    running_time = str(datetime.timedelta(seconds=running_time))
+    logger.info(f"ocr end time : {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    logger.info(f"ocr total running time: {running_time} seconds")
 
-start = time.time()
-str_from_img()
-end = time.time()
-running_time = end - start
-running_time = str(datetime.timedelta(seconds=running_time))
+# IN_GRADU_PATH = r'../res/img/graduation/'
 
-print(f'running time : {running_time}')
+OUT_GRADU_PATH = r'../out/ocr_result/graduation/'
+IN_GRADU_PATH = r'../res/test/'
+str_from_img(IN_GRADU_PATH, OUT_GRADU_PATH)
+#
+# print(f'running time : {running_time}')

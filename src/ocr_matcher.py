@@ -3,11 +3,20 @@ import glob
 import MeCab
 import re
 from collections import OrderedDict
+from log_config import set_logger
+from hangul_romanize import Transliter
+from hangul_romanize.rule import academic
 
-
+logger = set_logger()
 m = MeCab.Tagger()
+syn_path = r'../synonym/syn_education.csv'
+syn_file_list = [file[:] for file in glob.glob(syn_path)]
+transliter = Transliter(academic)
 
-univ_pattern = r'^[가-힣]{2,7}대학?교'
+
+# print('syn file list', syn_file_list)
+# univ_pattern = r"[가-힣a-zA-Z]{2,}대학교?"
+univ_pattern = r"[가-힣a-zA-Z]{2,}대학교?([가-힣\w]{2,})?"
 major_pattern = r'^(.)+([가-힣]{1,10})(전공|학과|학부)$'
 id_pattern = r'^([가-힣]{3,8})?-?([0-9]{2,4})[-(]?학[)-]?([0-9]{2,8})$'
 
@@ -20,7 +29,34 @@ major_list = []
 name_list = []
 id_list = []
 
+# def name_match(text: str) -> str:
+#     """
+#     :param text: ocr 추출 내용
+#         ocr 추출내용중에서 사람 이름과 매치되는 내용을 리스트에 담아서 최종적으로 반환함.
+#     :return ocr 추출한 내용을 그대로 반환(다른 메소드에서도 사용해야 함)
+#     """
+#     # for i in text:
+#     result = m.parse(text).split('\n')
+#     result = [a.split('\t') for a in result[:-2]]
+#     l = []
+#     for a in result:
+#         if(a[1].split(',')[1] == '인명'):
+#             l.append(a[0])
+#
+#     # l = [a[0] if a[1].split(',')[1] == '인명' else '' for a in result]
+#     print('name match: ', l)
+#     name_list.append(l)
+#         # for j in result:
+#         #     if len(j) > 0:
+#         #         name_list.append(j)
+#
+#     return text
 def name_match(text: list) -> list:
+    """
+    :param text: ocr 추출 내용
+        ocr 추출내용중에서 사람 이름과 매치되는 내용을 리스트에 담아서 최종적으로 반환함.
+    :return ocr 추출한 내용을 그대로 반환(다른 메소드에서도 사용해야 함)
+    """
     for i in text:
         result = m.parse(i).split('\n')
         result = [a.split('\t') for a in result[:-2]]
@@ -29,77 +65,45 @@ def name_match(text: list) -> list:
         for j in result:
             if len(j) > 0:
                 name_list.append(j)
-
-    # result = list(map(lambda x: m.parse(x).split('\n'), text))
-
-    # result = m.parse(text).split('\n')
-    # print('r', result)
-    # for i in range(len(result)):
-    #     print(result[i])
-        # result = [a.split('\t') for a in result[:-2]]
-    # print('a', result)
-    # result = [a if a[1].split(',')[1] == '인명' else a[0] for a in result]
-    # print(type(result), result)
-    # return result
-
-# def name_match(text: list) -> list:
-#     """
-#     입력 문자열을 형태소 분석한 결과 이름 정보가 포함되어 있을 경우 <name>으로 마스킹
-#     """
-#     result = map(lambda x: self.m.parse(x).split('\n'), text)
-#     result = []
-#     for i in range(len(text)):
-#         result.append(self.m.parse(text[i]).split('\n'))
-#     print('1', result)
-#     # for r in result:
-#     #     print(r)
-#     # for i in range(len(result)):
-#     #     print(result[i])
-#     # print('result:', result)
-#     # for i in range(len(result)):
-#     #      print(result[i].split['\t'])
-#     result = self.m.parse(text).split('\n')
-#     result = [a.split('\t') for a in result[:-2]]
-#     result = ['<name>' if a[1].split(',')[1] == '인명' else a[0] for a in result]
-#
-#     print(result)
-    # return result
-
-
+    # print(f"name :  {name_list}")
+    return text
 
 def university_match(text: list) -> list:
     """
-    :param text:
-    :return: word including university name
+    :param text: ocr 추출 내용
+        ocr 추출내용중에서 대학교명과 매치되는 내용을 리스트에 담아서 최종적으로 반환함.
+    :return ocr 추출한 내용을 그대로 반환(다른 메소드에서도 사용해야 함)
     """
     l = list(map(lambda x: p_univ.match(x), text))
+    # a = p_univ.match(text)
+    # print('match:', a)
+    # l = p_univ.findall(text)
+    # print('univ match: ', l)
+    # univ_list.append(l)
     # print('university list', l)
+
     for i in range(len(l)):
         if l[i] is not None:
-            # print(university_list[i].group(), university_list[i].span())
             univ_list.append(l[i].group())
 
-    # print('ae univ list:', univ_list)
-
-    #
-    # for i in range(len(university_list)):
-    #     r = text.find(university_list[i])
-    #     text = re.sub(r'^[가-힣]{2,7}대학?교?', '*' * len(university_list[i]), text)
-    #     university_name = university_list[i]
-    #     # print(text[r:len(result[i])])
-    #     print('r', r)
-    #     # text = text.replace(reg_univ.sub(text, '*'*len(result[i])), "")
-    # # text = reg_univ.subn(text[result])
-    # # result = list(map(lambda x: p.match(x), text))
     return text
 
 def id_match(text: list) -> list:
+    """
+    :param text: ocr 추출 내용
+        ocr 추출내용중에서 유저를 특징할 수 있는 학위명(ex.서울대2021(학)1234) 과 매치되는 내용을 리스트에 담아서 최종적으로 반환함.
+    :return ocr 추출한 내용을 그대로 반환(다른 메소드에서도 사용해야 함)
+    """
     l = list(map(lambda x: p_id.match(x), text))
-
+    # l = p_id.findall(text)
+    # id_list.append(l)
+    # print('id match:', l)
     # print('university list', l)
     for i in range(len(l)):
         if l[i] is not None:
-            # print(university_list[i].group(), university_list[i].span())
+    #         # print(university_list[i].group(), university_list[i].span())
+            v = transliter.translit(l[i].group())
+            print(f'변환 결과: {v}')
             id_list.append(l[i].group())
 
     return text
@@ -107,36 +111,60 @@ def id_match(text: list) -> list:
 
 def major_match(text: list) -> list:
     """
-    :param text:
-    :return: word including major
+    :param text: ocr 추출 내용
+        ocr 추출내용중에서 전공명과 매치되는 내용을 리스트에 담아서 최종적으로 반환함.
+    :return ocr 추출한 내용을 그대로 반환(다른 메소드에서도 사용해야 함)
     """
     l = list(map(lambda x: p_major.match(x), text))
-    # print('major_list', l)
+    # l = p_major.findall(text)
+    # major_list.append(l)
+    # print('major match', l)
     for i in range(len(l)):
-        # print(major_list[i])
+    #     # print(major_list[i])
         if l[i] is not None:
-            # print(major_list[i].group(), major_list[i].span())
             major_list.append(l[i].group())
 
-    # print('ab major list', major_list)
-    # # major_list = p_major.findall(text)
-    # print('major list', major_list)
-    # for i in range(len(major_list)):
-    #     r = text.find(major_list[i])
-    #     text = re.sub(r'^(.)+([가-힣]{1,10})(전공|학과|학부)', '*' * len(major_list[i]), text)
-    # pattern = r'^([가-힣]{1,10})(전공|학과|과|학부)'
-    # print(t for t in text)
-    # result = list(map(lambda x: p.match(x), text))
     return text
+
+def synonym_cleaner(text: str) -> str:
+    lines = []
+    for file in syn_file_list:
+        f = open(file, "r", encoding='UTF-8-SIG')
+        lines += f.readlines()
+        f.close()
+
+    lines = list(map(lambda x: x[:-1].split(","), lines))
+    lines = [
+        (line[0], "(" + "|".join(list(filter(lambda x: len(x) > 0, line[1:]))) + ")")
+        for line in lines]
+    lines = lines[1:]
+    result = []
+
+    for word_rep, regex in lines:
+        # print(word_rep, regex)
+        # print(type(word_rep), type(regex))
+        for t in text:
+            t = re.sub(regex, word_rep, t)
+            result.append(t)
+    # print('result', result)
+
+    return result
 
 func_list = [
     ('university', university_match),
     ('major', major_match),
     ('id', id_match),
+    ('synonym', synonym_cleaner),
     ('name', name_match),
 ]
 
 def list_to_dic(l, l_user):
+    """
+    
+    :param l: 이 모듈에서 사용하고 있는 match함수의 리스트
+    :param l_user: 사용자가 사용하길 원하는 match함수의 리스트
+    :return: 사용자가 원하는 match 함수를 dict 형태로 반환
+    """
     cleaning_dic = OrderedDict()
     for k, v in l:
         if k in l_user:
@@ -146,14 +174,30 @@ def list_to_dic(l, l_user):
 
 
 class Matcher():
+    def __enter__(self):
+        logger.info("Matcher object is created")
+        return self
+
     def __init__(self, clean_list):
-        print('List of match function : \"{}\"'.format(", ".join([x[0] for x in func_list])))
+        print('List of match function : \"{}\"\n'.format(", ".join([x[0] for x in func_list])))
         self.clean_list = clean_list
         self.cleaning_dic_cus = list_to_dic(func_list, clean_list)
 
     def match(self, text: list) -> list:
+        """
+        :param text: ocr로 추출된 내용의 리스트 
+        :return: 사용자가 선언한 match 리스트를 모두 수행하고 추출된 각 리스트들
+        """
+        # print('text:', text)
         for func_clean in self.cleaning_dic_cus.values():
             text = func_clean(text)
 
-        print('major_list', major_list, '\nuniv list:', univ_list, '\nname list: ', name_list, '\nld list: ', id_list)
-        return text
+        # print(f'=========================================================return results=========================================================\n'
+        #       'major_list', {major_list}, '\nuniv list:', {univ_list}, '\nname list: ', {name_list}, '\nld list: ', {id_list},
+        #       '\n================================================================================================================================\n')
+        logger.info(f'\nmajor_list, {major_list}, \nuniv list:, {univ_list},\nname list: , {name_list},\nld list: {id_list}\n')
+        return text, major_list, univ_list, name_list, id_list
+
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        logger.info("Matcher object is destroyed")
