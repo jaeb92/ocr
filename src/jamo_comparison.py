@@ -1,4 +1,5 @@
 from jamo import h2j, j2hcj
+from utils import get_split_from_syllable
 import numpy as np
 
 
@@ -21,8 +22,6 @@ def get_jamo_uni():
     # print('mo_uni:', uc)
     # print('ja_uni:', b)
 
-get_jamo_uni()
-
 def jamo_compare(*args):
     # print('args:', args)
     jamo = []
@@ -39,38 +38,25 @@ def jamo_compare(*args):
             total += int(ord(jamo[i][j]))
             y.append(ord(jamo[i][j]))
 
+            print(jamo[i][j])
         x.append(y)
         x2.append(total)
         # print(ord(jamo[i][j]))
         # print(type(jamo[i]))
     # print(x)
-    # print('x2:', x2)
+    print('x2:', x2)
 
     return x2
 
 # ========= test ==============
-test_origin = ['서울과학기술대학교','서울교육대학교','서울기독대학교','서울대학교','서울디지털대학교','서울사이버대학교']
+test_origin = ['서울사회복지대학원대학교']
 test_target = ['셔울과학기술대학교']
-test_origin = ['원광대학교','원광디지털대학교','원광보건대학교','위덕대학교']
-test_target = ['원광대학교']
-target_jamo_sum = jamo_compare(*test_target)
-origin_jamo_sum = jamo_compare(*test_origin)
+a = get_split_from_syllable(*test_target)
+b = get_split_from_syllable(*test_origin)
+
+print(a)
+print(b)
+# target_jamo_sum = jamo_compare(*test_target)
+# origin_jamo_sum = jamo_compare(*test_origin)
 # print('target:', target_jamo_sum)
 # print('origin:', origin_jamo_sum)
-result = []
-for i in target_jamo_sum:
-    for j in origin_jamo_sum:
-        result.append(abs(i-j))
-        # print(min(result), test_origin[np.argmin(result)])
-        # print()
-
-
-# print(j2hcj(h2j(test1)))
-# print(j2hcj(h2j(test2)))
-# print(j2hcj(h2j(test3)))
-# print(j2hcj(h2j(test4)))
-# print(j2hcj(h2j(test5)))
-
-
-# ratio = SequenceMatcher(None, test1, test2).ratio()
-# print(ratio)

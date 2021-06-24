@@ -121,6 +121,7 @@ def split_syllable_char(c):
         offset = ord(c) - 0xac00
         x = (offset - offset % 28) // 28
         init, med, final = x // 21, x % 21, offset % 28
+        # print(f"init {init}, med {med}, final: {final}")
         if not final:
             final = None
         else:

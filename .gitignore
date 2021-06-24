@@ -1,6 +1,10 @@
-res/
-stop_words/
-synonym/
+/res/
+/stop_words/
+/synonym/
+/done/
+/nouse/
+/out/
+/test/
 *.jpg
 *.png
 *.jpeg
