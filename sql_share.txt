@@ -1,0 +1,6 @@
+
+##### Digital Zone 수집 대학교의 학과리스트 조회 #####
+작성자 : 황재빈
+작성일자 : 2021-06-24
+############################################
+select distinct(ml.학교명, ml.학과명 ) as result from pdftest.major_list ml, (select distinct("대학교 리스트") from pdftest.university_list) ul where ml.학교명 = ul."대학교 리스트";

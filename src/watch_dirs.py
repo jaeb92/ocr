@@ -8,6 +8,7 @@ from utils import save_json
 import datetime
 import time
 
+
 class IamWatching:
     # watchDir = os.getcwd()
     watchDir = r'../out/ocr_result/jol/'

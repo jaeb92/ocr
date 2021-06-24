@@ -1,7 +1,21 @@
 import sqlalchemy
 import pandas as pd
 
-class Database:
+
+class Singleton(type):
+	_instances = {}
+
+	def __call__(cls, *args, **kwargs):
+		if cls not in cls._instances:
+			cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+		else:
+			cls._instances[cls].__init__(*args, **kwargs)
+
+		print(f"db instance : {cls._instances[cls]}")
+		return cls._instances[cls]
+
+class Database(metaclass=Singleton):
+
 	def __init__(self, user="jaeb", password="jaeb", db="ocr_db", host='192.168.1.35', port='5432'):
 		self.user = user
 		self.password = password

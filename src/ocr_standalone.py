@@ -8,8 +8,6 @@ import datetime
 from utils import get_file_list, move_file, make_new_name
 from log_config import set_logger
 
-from ocr_matcher import Matcher
-
 """
 USAGE:
     COMMAND LINE: python ocr_standalone.py -i [image path] -l [ocr language (default: en,ko)] -g [the number of over 0, default -1]
