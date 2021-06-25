@@ -8,7 +8,6 @@ from utils import save_json
 import datetime
 import time
 
-
 class IamWatching:
     # watchDir = os.getcwd()
     watchDir = r'../out/ocr_result/jol/'
@@ -58,6 +57,7 @@ class Handler(FileSystemEventHandler):
             save_path = r'../out/dict_result/result.json'
             id = os.path.splitext(os.path.basename(target))[0]
             save_json(save_path, result_dict, id)
+
         except Exception as e:
             print(f"ERROR: {e}")
     # def on_deleted(self, event): #파일, 디렉터리가 삭제되면 실행

@@ -1,4 +1,5 @@
 import os
+import time
 import glob
 import MeCab
 import re
@@ -6,7 +7,6 @@ import pandas as pd
 import numpy as np
 import itertools
 
-print(f"\ncurrent working directory : {os.getcwd()}\n")
 from collections import OrderedDict
 from log_config import set_logger
 from hangul_romanize import Transliter
@@ -25,13 +25,16 @@ education = pd.read_csv('../res/csv/result.csv', sep=',', encoding='utf-8-sig')[
 syn_file_list = [file[:] for file in glob.glob(syn_path)]
 transliter = Transliter(academic)
 
-sw_path = r'D:/ocr_test/preprocess/stop_words/*.txt'
+sw_path = r'D:/dv_21/opencv/stop_words/*.txt'
 sw_file_list = [file[:] for file in glob.glob(sw_path)]
 
 univ_pattern = r"[가-힣a-zA-Z]{2,}대학교?"
 major_pattern = r"^([가-힣]{1,10})(전공|학과|학부)+"
 id_pattern = r'^([가-힣]{3,8})?-?([0-9]{2,4})[-(]?학[)-]?([0-9]{2,8})$'
-date_pattern = r'^((19[0-9][0-9]|20\d{2}|202/)[-년\s\\.]?[\s]?)?((0?[0-9]|1[0-2])[-월\s\\.]?[\s]?)?((0?[1-9]|[1-2][0-9]|3[0-1])[일\\.]?)?$'
+# date_pattern = r'^((19[0-9][0-9]|20\d{2}|202/)[-년\s\\.]?[\s]?)?((0?[0-9]|1[0-2])[-월\s\\.]?[\s]?)?((0?[1-9]|[1-2][0-9]|3[0-1])[일\\.]?)?$ '
+# date_pattern = r'^([가-힣]+)?(((19|20)\d{2}|202\/)[\-년\s\.]?[\s]?)((0?[0-9]|1[0-2])[-월\s\.]?[\s]?)?((0?[1-9]|[1-2][0-9]|3[0-1])[일\.\s])?$'
+# date_pattern = r'^((([가-힣]{1,})?\s?(19|20)\d{2}|202\/)[\-년\s\.]?[\s]?)?((0?[0-9]|1[0-2])[-월\s\.][\s]?)?((0?[1-9]|[1-2][0-9]|3[0-1])[일\.\s])?$'
+date_pattern = r'^((([가-힣]{1,})?\s?(19|20)\d{2}|202\/)[\-년\s\.]?[\s]?)?((0?[0-9]|1[0-2])[-월\s\.]?[\s]?)?((0?[1-9]|[1-2][0-9]|3[0-1]|[0-9])([일\.\s])?)?$'
 p_univ = re.compile(univ_pattern)
 p_major = re.compile(major_pattern)
 p_id = re.compile(id_pattern)
@@ -44,8 +47,100 @@ id_list = []
 date_list = []
 date_dict = {}
 
+def character_cleaner(text):
+    text = list(map(lambda x: re.sub('[-=+#\?:^$@*\"※~&%ㆍ!』\\‘|\(\)\[\]\<\>`\'…》]', '', x), text))
+    # text = re.sub('[-=+#/\?:^$.@*\"※~&%ㆍ!』\\‘|\(\)\[\]\<\>`\'…》]', '', text)
+    return text
 
-def name_match2(text: list) -> list:
+
+# 공백제거 replace
+def space_cleaner(text):
+    # text = [x.replace(' ', '') for x in text]
+    text = list(map(lambda x: x.replace(' ', ''), text))
+    return text
+
+
+# 불용어 제거
+def stopword_cleaner(text: list) -> list:
+    stopwords = []
+    for filename in sw_file_list:
+        f = open(filename, "r", encoding='UTF-8')
+        stopwords += [line[:-1] for line in f.readlines()]
+        # print('stopwords', stopwords)
+        f.close()
+    try:
+        text = list(map(lambda x: re.sub("(?<![a-zA-Z가-힣0-9<>])(" + '|'.join(stopwords) + ")(?![a-zA-Z가-힣0-9<>])", "", x), text))
+    except Exception as e:
+        print('stopwords cleaner occurred error because of ', e)
+    # return text[:-1]
+
+    try:
+        for w in stopwords:
+            for i, t in enumerate(text):
+                if w in t:
+                    f = t.find(w)
+                    if f > 0:
+                        t = t[:f] + ' ' + t[f + len(w):]
+                    elif f == 0:
+                        t = t[f + len(w):]
+                    else:
+                        pass
+                    print(text[i], '>> ', t)
+
+    except Exception as e:
+        print(f'{__name__}: {e}')
+    return text
+
+
+def clean_text(data):
+    cleaned_data = space_cleaner(data)
+    # text = ','.join(cleaned_data)
+    text = character_cleaner(cleaned_data)
+    text = stopword_cleaner(text)
+    print(f'불용어제거 후: {text}')
+    return text
+
+
+# def name_match(datas):
+#
+#     global name_list
+#     name_word = ['성명', ' 명 ', ' 성 ', '명', '성']
+#     # 정규식 패턴 정의
+#     name_pattern = r"[가-힣]{2,4}"
+#     p = re.compile(name_pattern)
+#     # datas = [datas]
+#     print('datas:', datas)
+#     for idx, data in enumerate(datas):
+#         text = data
+#         # cleaned_data = clean_text(data)
+#         # print(f"cleaned_data:{cleaned_data}")
+#         for idx2, word in enumerate(name_word):
+#             if word in data:
+#                 print(f'{word} in {data}')
+#                 index = datas.index(word)
+#                 print(f'index: {index}')
+#                 text = datas[index+1]
+#                 print(f'find! : {text}')
+#                 # print(f"text:{text}")
+#                 print(f'break!')
+#                 break
+#
+#
+#         name_m = p.search(text)
+#         if name_m:
+#             print('이름:', name_m.group())
+#             name = name_m.group()
+#             name_list.append(name)
+#         else:
+#             print('pattern does not match')
+#
+#     name_list = list(set(name_list))
+#     # datas = list(itertools.chain.from_iterable(datas))
+#     return datas
+
+
+
+def name_match(text: list) -> list:
     """
     :param text: ocr 추출 내용
         ocr 추출내용중에서 사람 이름과 매치되는 내용을 리스트에 담아서 최종적으로 반환함.
@@ -65,83 +160,11 @@ def name_match2(text: list) -> list:
     name_list = list(set(name_list))
     # print(f"name :  {name_list}")
     if len(name_list) > 0:
-        print(f"이름을 찾았습니다. {name_list}")
+        print(f"이름을 찾았습니다. {name_list}\n")
     else:
         print(f"이름 정보를 찾지 못했습니다.")
 
     return text
-
-def character_cleaner(text):
-    text = re.sub('[-=+#/\?:^$.@*\"※~&%ㆍ!』\\‘|\(\)\[\]\<\>`\'…》]', '', text)
-    return text
-
-
-# 공백제거 replace
-def space_cleaner(data):
-    data = [x.replace(' ', '') for x in data]
-    return data
-
-
-# 불용어 제거
-def stopword_cleaner(text: str) -> str:
-    stopwords = []
-    for filename in sw_file_list:
-        f = open(filename, "r", encoding='UTF-8')
-        stopwords += [line[:-1] for line in f.readlines()]
-        # print('stopwords', stopwords)
-        f.close()
-    text = " " + text + " "
-    # print('text:',text)
-    temp = '|'.join(stopwords)
-    try:
-        text = re.sub("(?<![a-zA-Z가-힣0-9<>])(" + '|'.join(stopwords) + ")(?![a-zA-Z가-힣0-9<>])", "", text)
-
-    except Exception as e:
-        print('stopwords cleaner occurred error because of ', e)
-
-    return text[:-1]
-
-
-
-def clean_text(data):
-    cleaned_data = space_cleaner(data)
-    text = ','.join(cleaned_data)
-    text = character_cleaner(text)
-    text = stopword_cleaner(text)
-    return text
-
-
-def name_match(datas: list):
-
-    names = []
-    name_word = ['성명', ' 명 ', ' 성 ', '명', '성']
-    # 정규식 패턴 정의
-    name_pattern = r"[가-힣]{2,4}"
-    p = re.compile(name_pattern)
-    datas = [datas]
-    for idx, data in enumerate(datas):
-        text = data
-        cleaned_data = clean_text(data)
-        # print(f"cleaned_data:{cleaned_data}")
-        for idx2, word in enumerate(name_word):
-            if word in cleaned_data:
-                index = cleaned_data.find(word)
-                text = cleaned_data[index + len(word):]
-                # print(f"text:{text}")
-                break
-
-        name_m = p.search(text)
-        if name_m:
-            print('이름:', name_m.group())
-            name = name_m.group()
-            name_list.append(name)
-        else:
-            print('pattern does not match')
-
-    print('name_list:', name_list)
-    datas = itertools.chain.from_iterable(datas)
-    return datas
-
 
 
 def university_match(text: list) -> list:
@@ -200,9 +223,9 @@ def university_match(text: list) -> list:
 
         univ_list.append(max_edu)
     if len(univ_list) > 0:
-        print(f"학교를 찾았습니다. {univ_list}")
+        print(f"학교를 찾았습니다. {univ_list}\n")
     else:
-        print(f"학교 정보를 찾지 못했습니다.")
+        print(f"학교 정보를 찾지 못했습니다.\n")
     return text
 
 def id_match(text: list) -> list:
@@ -227,9 +250,9 @@ def id_match(text: list) -> list:
             id_list.append(l[i].group())
 
     if len(id_list) > 0:
-        print(f"학위번호를 찾았습니다. {id_list}")
+        print(f"학위번호를 찾았습니다. {id_list}\n")
     else:
-        print(f"학위번호를 찾지 못했습니다.")
+        print(f"학위번호를 찾지 못했습니다.\n")
     return text
 
 
@@ -240,7 +263,7 @@ def major_match(text: list) -> list:
     :return ocr 추출한 내용을 그대로 반환(다른 메소드에서도 사용해야 함)
     """
     print("전공을 찾는중...")
-    print(f"\n\n학교리스트: {univ_list}\n\n")
+    # print(f"\n\n학교리스트: {univ_list}\n\n")
     l = list(map(lambda x: p_major.match(x), text))
     global major_list
     # l = p_major.findall(text)
@@ -253,25 +276,25 @@ def major_match(text: list) -> list:
     if len(major_list) > 0:
         if univ_list:
             sql = "select distinct 학과명 from pdftest.major_list where 학교명 = '" + univ_list[0] + "' order by 학과명 asc"
-            b = db.select(sql)['학과명'].tolist()
-            # print(b)
+            major_db = db.select(sql)['학과명'].tolist()
+            # print('db 조회 결과: ', major_db)
+            major = 0
+            for m in major_db:
+                for c in major_list:
+                    s = SequenceMatcher(None, c, m).ratio()
+                    if s > 0.5:
+                        # print('유사도 0.5 이상 학과 >', m, s)
+                        if c == m or (c in m) or (m in c):
+                            major = m
 
-            import time
-            time.sleep(5)
-            max = 0
-            max_univ = ''
-            for i in b:
-                for j in major_list:
-                    s = SequenceMatcher(None, j, i).ratio()
-                    if max < s:
-                        max_univ = i
-                        max = s
+                    # if max < s:
+                    #     max_univ = i
+                    #     max = s
 
-        print(f"전공을 찾았습니다. {major_list}")
-        print(f"{max_univ} >> {max}")
-        major_list = [max_univ]
+        print(f"전공을 찾았습니다. {major}\n")
+        major_list = [major]
     else:
-        print("전공을 찾지 못했습니다.")
+        print("전공을 찾지 못했습니다.\n")
     return text
 
 
@@ -281,41 +304,59 @@ def date_match(text: list) -> list:
     :return:
     """
     print("날짜를 찾는중...")
-
-    l = list(map(lambda x: p_date.match(x), text))
+    date = ''
+    l = list(map(lambda x: p_date.match(x) if len(x) > 0 else None, text))
+    # print(f'날짜패턴 일치 후보 : {l}')
     global date_dict
     date_cdd = []
     for i in range(len(l)):
-        if l[i] is not None:
+        if l[i] is not None and len(l[i].group()) > 0:
             d = l[i].group()
             if l[i].group() == '202/년':
                 d = l[i].group().replace('/', '1')
             date_cdd.append(d)
     tmp = []
-    for i in range(len(date_cdd)):
+    # print('date_cdd:', date_cdd)
+    year_flag = False
+    for i in range(len(date_cdd) - 2):
+        # print(f'date_cdd[{i}] : {date_cdd[i]}')
         if i >= len(date_cdd):
             break
 
         if len(date_cdd[i]) >= 4:
             date = date_cdd[i]
             year_flag = True
-            if year_flag and len(date_cdd[i+1]) < 4:
-                date += ' ' + date_cdd[i+1] + ' ' + date_cdd[i+2]
+
+        print(date_cdd[i], year_flag)
+        # if date_cdd[i].find('년') > 0 and (date_cdd[i].find('년') != len(date_cdd[i]) - 1):
+        #     print('?ㅁㄴㅇㅁㄴㅇ:', date_cdd[i])
+        #     date += ' ' + date_cdd[i+1]
+        if year_flag and len(date_cdd[i+1]) < 4:
+            print('월일찾기')
+            date += ' ' + date_cdd[i+1] + ' ' + date_cdd[i+2]
+            year_flag = False
 
         tmp.append(date)
-
     date_cdd = sorted(list(set(tmp)))
     date_keys = ['birth_dt', 'graduation_dt', 'certification_dt']
     date_dict = {key: date_cdd[i] for i, key in enumerate(date_keys)}
 
+    t = list(map(lambda x: date_dict[x].replace('. ', '.'), date_keys))
+    t = list(map(lambda x: x.replace('-', '.').replace('. ', '.').replace(' ', '.'), t))
+    date_cdd = list(map(lambda x: x.replace('년', '').replace('월', '').replace('일', ''), t))
+    date_dict = {key: date_cdd[i] for i, key in enumerate(date_keys)}
 
     if len(date_dict) > 0:
-        print(f"날짜를 찾았습니다. {date_dict}")
+        print(f"날짜를 찾았습니다. {date_dict}\n")
     else:
-        print("날짜를 찾지 못했습니다.")
+        print("날짜를 찾지 못했습니다.\n")
+
     return text
 
+
+
 func_list = [
+    ('text', clean_text),
     ('university', university_match),
     ('major', major_match),
     ('id', id_match),
@@ -354,7 +395,6 @@ class Matcher():
         :return: 사용자가 선언한 match 메소드들을 모두 수행하여 학교, 학과, 이름, 학위번호, 날짜정보를
                 추출 후 반환
         """
-        print('text:', text)
         for func_clean in self.cleaning_dic_cus.values():
             text = func_clean(text)
 
