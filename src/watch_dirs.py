@@ -10,6 +10,7 @@ import time
 
 class IamWatching:
     # watchDir = os.getcwd()
+    # 감시할 폴더 경로
     watchDir = r'../out/ocr_result/jol/'
 
     #watchDir에 감시하려는 디렉토리를 명시한다.
@@ -23,6 +24,7 @@ class IamWatching:
         self.observer.schedule(event_handler, self.watchDir, recursive=True)
         self.observer.start()
         try:
+            # 무한루프를 돌면서 폴더 변경을 감지
             while True:
                 time.sleep(0.5)
         except:
@@ -63,6 +65,9 @@ class Handler(FileSystemEventHandler):
     # def on_deleted(self, event): #파일, 디렉터리가 삭제되면 실행
     #     print(event)
 
+    def on_update(self, event):
+        #
+        pass
 
 # if __name__ == '__main__': #본 파일에서 실행될 때만 실행되도록 함
 w = IamWatching()
